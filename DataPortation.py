@@ -46,20 +46,28 @@ def import_e_smart(from_client: pymongo.MongoClient,
     import_vehicle(to_client, to_location, some_e_smart)
 
 
-def manipulate_vehicle_field(client: pymongo.MongoClient,
-                             vehicle_id: str,
-                             update: dict):
-    _update = update.copy()
-    _update.update({
-        'lastChangeDate': datetime.datetime.utcnow(),
-        'lastCABAUpdateDate': datetime.datetime.utcnow()
-    })
+def manipulate_vehicle_fields(client: pymongo.MongoClient,
+                              vehicle_id: str,
+                              update: dict):
 
     client.get_database('fmm').get_collection('vehicle').find_one_and_update(
         {'_id': vehicle_id},
-        {'$set': _update}
+        {'$set': update}
     )
+    update_last_change_date(client, vehicle_id)
 
+
+def update_last_change_date(client: pymongo.MongoClient,
+                            vehicle_id: str):
+    update_date = {
+        'lastChangeDate': datetime.datetime.utcnow(),
+        'lastCABAUpdateDate': datetime.datetime.utcnow()
+    }
+
+    client.get_database('fmm').get_collection('vehicle').find_one_and_update(
+        {'_id': vehicle_id},
+        {'$set': update_date}
+    )
 
 def get_random_vehicle_id(client: pymongo.MongoClient,
                           location_name: str):
