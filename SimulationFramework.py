@@ -2,10 +2,11 @@ import FMMFramework as FMM
 import random
 from Connection import client_hack
 from config import vehicle_count
-from typing import Union
+from typing import Union, Generator
 from numbers import Number
 
-def all_license_plates():
+
+def all_license_plates() -> Generator:
     return ('NH-{}'.format(i) for i in range(vehicle_count))
 
 
@@ -64,8 +65,18 @@ def drain_fuel(license_plate: str, drain: Union[str, Number]):
     set_fuel_level(license_plate, new_fuel_level)
 
 
+def delete_all_tasks_for_vehicle(license_plate: str, types: list=None):
+    vehicle_id = FMM.get_vehicle_by_license_plate(license_plate)['_id']
+
+
+# TODO: create and delete tasks
+
 if __name__ == '__main__':
-    vehicle_id = FMM.get_some_vehicle(client_hack, 'New Hackshire')['_id']
+    vehicle = FMM.get_vehicle_by_license_plate(client_hack, 'NH-0')
+    print(FMM.get_tasks(client_hack, {'vehicleId': vehicle['_id']}))
+    # TODO: write test cases
+
+
 
 
 
