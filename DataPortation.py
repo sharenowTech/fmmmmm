@@ -2,10 +2,39 @@ import pymongo.database
 import random
 import datetime
 
+
 def get_location_id(client: pymongo.MongoClient, location_name: str):
     return client.get_database('common').get_collection('location').find_one({
         'name': location_name
     })['_id']
+
+
+def get_some_e_smart(from_client: pymongo.MongoClient,
+                     from_location: str) -> dict:
+    e_smart_query = {
+        'locationId': get_location_id(
+            from_client, from_location
+        ),
+        'model': "SMART", 'engine_type': "ED",
+        'status': "green",
+        'hardwareVersion': "HW3"
+    }
+
+    e_smarts = (
+        from_client.get_database('fmm').get_collection('vehicle').find(
+            e_smart_query
+        )
+    )
+
+    return e_smarts[random.randint(0, e_smarts.count()-1)]
+
+
+def import_vehicle(to_client: pymongo.MongoClient,
+                   to_location: str,
+                   vehicle: dict):
+    to_location_id = get_location_id(to_client, to_location)
+    vehicle['locationId'] = to_location_id
+    to_client.get_database('fmm').get_collection('vehicle').insert(vehicle)
 
 
 def import_e_smart(from_client: pymongo.MongoClient,
@@ -13,26 +42,8 @@ def import_e_smart(from_client: pymongo.MongoClient,
                    to_client: pymongo.MongoClient,
                    to_location: str):
 
-    e_smart_query = {
-        'locationId': get_location_id(
-            from_client, from_location
-        ),
-        'model': "SMART", 'engine_type': "ED",
-        'status': "green",
-        'hardwareVersion': "HW3"}
-
-    e_smart = (
-        from_client.get_database('fmm').get_collection('vehicle').find_one(
-            e_smart_query)
-    )
-
-    to_location_id = get_location_id(
-        to_client, to_location
-    )
-
-    e_smart['locationId'] = to_location_id
-
-    to_client.get_database('fmm').get_collection('vehicle').insert(e_smart)
+    some_e_smart = get_some_e_smart(from_client, from_location)
+    import_vehicle(to_client, to_location, some_e_smart)
 
 
 def manipulate_vehicle_field(client: pymongo.MongoClient,
@@ -59,16 +70,6 @@ def get_random_vehicle_id(client: pymongo.MongoClient,
     return vehicles[random.randint(0, vehicles.count()-1)]['_id']
 
 
-
-
-
-
+# unit-tests
 if __name__ == '__main__':
-    from Connection import client_hack
-    print(get_location_id(client_hack, 'New Hackshire'))
-    vehicle_id = get_random_vehicle_id(client_hack, 'New Hackshire')
-    print(vehicle_id)
-    manipulate_vehicle_field(
-        client_hack, vehicle_id,
-        {'battery_voltage': '8.000', 'batteryVoltage': '8.000'}
-    )
+    pass
