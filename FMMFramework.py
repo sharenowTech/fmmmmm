@@ -3,6 +3,10 @@ import random
 import datetime
 
 
+def get_vehicle_collection(client: pymongo.MongoClient
+                           ) -> pymongo.database.Collection:
+    return client.get_database('fmm').get_collection('vehicle')
+
 def get_location_id(client: pymongo.MongoClient, location_name: str):
     return client.get_database('common').get_collection('location').find_one({
         'name': location_name
@@ -17,7 +21,9 @@ def get_some_e_smart(from_client: pymongo.MongoClient,
         ),
         'model': "SMART", 'engine_type': "ED",
         'status': "green",
-        'hardwareVersion': "HW3"
+        'hardwareVersion': "HW3",
+        'has_damages': 'false',
+        'hasDamages': 'false'
     }
 
     e_smarts = (
@@ -46,15 +52,22 @@ def import_e_smart(from_client: pymongo.MongoClient,
     import_vehicle(to_client, to_location, some_e_smart)
 
 
-def manipulate_vehicle_fields(client: pymongo.MongoClient,
-                              vehicle_id: str,
-                              update: dict):
+def get_vehicle_fields(client: pymongo.MongoClient,
+                       vehicle_id: str,
+                       keys: list):
+    vehicle = get_vehicle_by_id(client, vehicle_id)
+    return {key: vehicle[key] for key in keys}
 
-    client.get_database('fmm').get_collection('vehicle').find_one_and_update(
+
+def set_vehicle_fields(client: pymongo.MongoClient,
+                       vehicle_id: str,
+                       update: dict):
+    get_vehicle_collection(client).find_one_and_update(
         {'_id': vehicle_id},
         {'$set': update}
     )
     update_last_change_date(client, vehicle_id)
+
 
 
 def update_last_change_date(client: pymongo.MongoClient,
@@ -64,19 +77,33 @@ def update_last_change_date(client: pymongo.MongoClient,
         'lastCABAUpdateDate': datetime.datetime.utcnow()
     }
 
-    client.get_database('fmm').get_collection('vehicle').find_one_and_update(
+    get_vehicle_collection(client).find_one_and_update(
         {'_id': vehicle_id},
         {'$set': update_date}
     )
 
-def get_random_vehicle_id(client: pymongo.MongoClient,
-                          location_name: str):
+
+def get_some_vehicle(client: pymongo.MongoClient,
+                     location_name: str) -> dict:
     location_id = get_location_id(client, location_name)
-    vehicles = client.get_database('fmm').get_collection('vehicle').find({
+    vehicles = get_vehicle_collection(client).find({
         'locationId': location_id
     })
-    return vehicles[random.randint(0, vehicles.count()-1)]['_id']
+    return vehicles[random.randint(0, vehicles.count()-1)]
 
+
+def get_vehicle_by_id(client: pymongo.MongoClient, vehicle_id: str) -> dict:
+    return get_vehicle_collection(client).find_one({'_id': vehicle_id})
+
+
+def get_vehicle_by_license_plate(client: pymongo.MongoClient,
+                                 license_plate: str) -> dict:
+    return get_vehicle_collection(client).find_one(
+        filter={
+            'plate': license_plate,
+            'numberPlate': license_plate
+        }
+    )
 
 # unit-tests
 if __name__ == '__main__':
