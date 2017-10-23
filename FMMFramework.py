@@ -105,6 +105,14 @@ def get_vehicle_by_license_plate(client: pymongo.MongoClient,
         }
     )
 
+
+def get_tasks(client: pymongo.MongoClient, filter: dict=None):
+    return client.get_database('fmm').get_collection('task').find(
+        filter if filter is not None else None
+    )
+
 # unit-tests
 if __name__ == '__main__':
-    pass
+    from Connection import client_hack
+    for task in get_tasks(client_hack):
+        print(task)
