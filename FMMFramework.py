@@ -7,6 +7,7 @@ def get_vehicle_collection(client: pymongo.MongoClient
                            ) -> pymongo.database.Collection:
     return client.get_database('fmm').get_collection('vehicle')
 
+
 def get_location_id(client: pymongo.MongoClient, location_name: str):
     return client.get_database('common').get_collection('location').find_one({
         'name': location_name
@@ -110,6 +111,10 @@ def get_tasks(client: pymongo.MongoClient, filter: dict=None):
     return client.get_database('fmm').get_collection('task').find(
         filter if filter is not None else None
     )
+
+
+def delete_tasks(client: pymongo.MongoClient, filter: dict):
+    client.get_database('fmm').get_collection('task').delete_many(filter)
 
 # unit-tests
 if __name__ == '__main__':
