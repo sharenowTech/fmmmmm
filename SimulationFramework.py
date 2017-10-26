@@ -1,9 +1,17 @@
 import FMMFramework as FMM
 import random
-from Connection import client_hack
-from config import vehicle_count
+from Connection import client_hack, accessToken
+from SimulationDataImport import random_coordinates_from_hackathon_location
+from Projection import hackathon_projector
+from config import vehicle_count, fmm_api_url
 from typing import Union, Generator
 from numbers import Number
+
+app_opening_task_type= (
+    client_hack.get_database('fmm').get_collection('taskType')
+).find_one({'name': 'App Opening'})
+
+admin_user_id = '55b95aa8010149cd54d6e089'
 
 
 def all_license_plates() -> Generator:
@@ -52,6 +60,34 @@ def set_battery_voltage(license_plate: str,
     )
 
 
+def create_app_opening(license_plate: str):
+    vehicle_id = FMM.get_vehicle_by_license_plate(client_hack,
+                                                  license_plate)['_id']
+
+    while True:
+        origin = random_coordinates_from_hackathon_location()
+        destination = random_coordinates_from_hackathon_location()
+        distance = hackathon_projector.distance(origin, destination)
+        if distance >= 300.0:
+            break
+
+    location_id = FMM.get_location_id(client_hack, 'New Hackshire')
+
+    additional_fields = {
+        'origin': origin,
+        'destination': destination,
+        'revenue': distance * 1/100,
+        'picked_up': False,
+        'delivered': False
+    }
+
+    FMM.create_task(
+        client_hack, app_opening_task_type,
+        vehicle_id, location_id, admin_user_id,
+        fmm_api_url, accessToken, additional_fields
+    )
+
+
 def revive_12v_battery(license_plate: str):
     set_battery_voltage(license_plate, random.uniform(12.0, 14.0))
 
@@ -80,25 +116,32 @@ def get_tasks_for_vehicle(license_plate: str):
 def delete_tasks_for_vehicle(license_plate: str):
     vehicle_id = FMM.get_vehicle_by_license_plate(client_hack,
                                                   license_plate)['_id']
+
     FMM.delete_tasks(client_hack, {'vehicleId': vehicle_id})
 
 
 if __name__ == '__main__':
-    plate = 'NH-0'
     """
     vehicle = FMM.get_vehicle_by_license_plate(client_hack, 'NH-0')
     print(get_fuel_level(plate))
     print(set_fuel_level(plate, 120))
     print(get_fuel_level(plate))
     print(get_tasks_for_vehicle(plate))
-    """
+    
     # delete_tasks_for_vehicle(plate)
     print([task for task in get_tasks_for_vehicle(plate)])
     # kill_12v_battery(plate)
     revive_12v_battery(plate)
     # delete_tasks_for_vehicle(plate)
-
-
+    """
+    create_app_opening('NH-0')
+    """
+    for plate in all_license_plates():
+        vehicle = FMM.get_vehicle_by_license_plate(client_hack, plate)
+        client_hack.get_database('fmm').get_collection('vehicle').update_many(
+            {}, {'$set': {'locationAlias': 'newhack'}}
+        )
+    """
 
 
 
