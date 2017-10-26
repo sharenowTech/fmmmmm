@@ -43,8 +43,10 @@ def execute_action(action):
 def app_opening_periodic(propability: float):
     for plate in sim.all_license_plates():
         if random.random() < propability:
-            # TODO: write app opening code
-            pass
+            action_queues[plate].put(
+                [sim.create_app_opening, [plate]]
+            )
+    start_workers()
 
 
 def drain_fuel_periodic(min_drain: float, max_drain: float):
@@ -112,6 +114,8 @@ def simulation_step(step_frequency: float=1.0):
     # kill battery about once per hour
     kill_battery_periodic(time_per_step/3600.0)
 
+    # app-opening every minute
+    app_opening_periodic(time_per_step/60.0)
 
 
 def main():
