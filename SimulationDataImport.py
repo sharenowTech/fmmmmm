@@ -2,13 +2,12 @@ import random
 import FMMFramework as FMM
 from Utilities import get_address
 from Connection import client_int, client_hack
-
+from Projection import minlat_, minlon_, maxlat_, maxlon_, hackathon_projector
 
 def random_coordinates_from_hackathon_location():
-    minlat, maxlat = 40.7497, 40.7687
-    minlon, maxlon = -73.9916, -73.9656
-    lat = str(random.uniform(minlat, maxlat))
-    lon = str(random.uniform(minlon, maxlon))
+    lat = str(random.uniform(minlat_, maxlat_))
+    lon = str(random.uniform(minlon_, maxlon_))
+
     address = get_address(lat, lon)
 
     return {
