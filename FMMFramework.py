@@ -1,6 +1,8 @@
 import pymongo.database
 import random
 import datetime
+import requests
+from typing import List
 
 
 def get_vehicle_collection(client: pymongo.MongoClient
@@ -112,6 +114,53 @@ def get_tasks(client: pymongo.MongoClient, filter: dict=None):
         filter if filter is not None else None
     )
 
+def get_task(client: pymongo.MongoClient, task_id):
+    return client.get_database('fmm').get_collection('task').find_one(
+        {'_id': task_id}
+    )
+
+def create_task(client: pymongo.MongoClient,
+                task_type: dict,
+                vehicle_id: str,
+                location_id: str,
+                user_id: str,
+                url: str,
+                access_token: str,
+                additional_fields: dict=None):
+    task = {
+        'vehicleId': vehicle_id,
+        'vehicle_comment': None,
+        'assignedTo': None,
+        'assigned': None,
+        'status': 'OPEN',
+        'locationId': location_id,
+        'followOn': False,
+        'createdBy': pymongo.database.ObjectId(user_id),
+        'photos': [],
+        'activities': [],
+        'created': datetime.datetime.utcnow(),
+        'disregardStatus': False,
+        'taskType': [task_type],
+        'comments': [],
+    }
+
+    if additional_fields is not None:
+        task.update(additional_fields)
+
+    client.get_database('fmm').get_collection('task').insert(
+        task
+    )
+
+    requests.get(
+        url=url+'/protected/vehicles/syncByVehicleId/'+str(vehicle_id),
+        headers={'accessToken': access_token, 'userId': user_id}
+    )
+
+
+
+def assign_task_to_vehicle(client: pymongo.MongoClient,
+                           task_id):
+    pass
 
 def delete_tasks(client: pymongo.MongoClient, filter: dict):
     client.get_database('fmm').get_collection('task').delete_many(filter)
