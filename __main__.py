@@ -2,15 +2,18 @@ import SimulationFramework as sim
 import numpy as np
 import threading
 import random
+import queue
 from time import sleep
 from queue import Queue
 from typing import List, Callable
+from Projection import hackathon_projector
 
 action_queues = {
     plate: Queue()
     for plate in sim.all_license_plates()
 }
 
+charging_stations = sim.get_all_charging_stations()
 
 class QueueWorker(threading.Thread):
     def __init__(self, queue: Queue):
@@ -61,6 +64,7 @@ def drain_fuel_periodic(min_drain: float, max_drain: float):
                                                                    max_drain))
 
 
+
 def kill_battery_periodic(propability: float):
     for plate in sim.all_license_plates():
         if random.random() < propability:
@@ -90,6 +94,24 @@ def initialize_simulation():
         print('Initialized Simulation.')
 
 
+def check_position():
+    pos = {}
+    for plate in sim.all_license_plates():
+        pos[plate] = sim.get_lon_lat_of_vehicle(plate)
+
+        for pos_station in charging_stations.values():
+            if hackathon_projector.distance(pos[plate], pos_station) <= 100:
+                action_queues[plate].put(
+                    [sim.drain_fuel, [plate, -5]]
+                )
+    start_workers()
+
+def check_delivery():
+    # TODO: get app opening tasks for every vehicle and check if customer
+    # has been picked up or delivered
+    pass
+
+
 def start_workers():
     for plate in sim.all_license_plates():
         QueueWorker(action_queues[plate]).start()
@@ -100,7 +122,7 @@ def is_finished_simulation() -> bool:
     return False
 
 
-def simulation_step(step_frequency: float=1.0):
+def simulation_step(step_frequency: float=5.0):
     """
     perfoms 1 simulation step on fmm
     :param step_frequency: number of simulation steps per second
@@ -123,7 +145,8 @@ def main():
     initialize_simulation()
     # simulation loop
     while not is_finished_simulation():
-        simulation_step()
+        threading.Thread(target=check_position).start()
+        simulation_step(step_frequency)
         sleep(1.0/step_frequency)
 
 
