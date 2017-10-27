@@ -25,8 +25,6 @@ def get_some_e_smart(from_client: pymongo.MongoClient,
         'model': "SMART", 'engine_type': "ED",
         'status': "green",
         'hardwareVersion': "HW3",
-        'has_damages': 'false',
-        'hasDamages': 'false'
     }
 
     e_smarts = (
@@ -65,9 +63,10 @@ def get_vehicle_fields(client: pymongo.MongoClient,
 def set_vehicle_fields(client: pymongo.MongoClient,
                        vehicle_id: str,
                        update: dict):
-    get_vehicle_collection(client).find_one_and_update(
+    get_vehicle_collection(client).update_one(
         {'_id': vehicle_id},
-        {'$set': update}
+        {'$set': update},
+        bypass_document_validation=True
     )
     update_last_change_date(client, vehicle_id)
 
