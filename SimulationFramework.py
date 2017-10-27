@@ -11,6 +11,10 @@ app_opening_task_type= (
     client_hack.get_database('fmm').get_collection('taskType')
 ).find_one({'name': 'App Opening'})
 
+charging_station_task_type = (
+    client_hack.get_database('fmm').get_collection('taskType')
+).find_one({'name': 'Charging Station'})
+
 admin_user_id = '55b95aa8010149cd54d6e089'
 
 
@@ -87,6 +91,14 @@ def create_app_opening(license_plate: str):
         fmm_api_url, accessToken, additional_fields
     )
 
+def create_charging_station_task(charging_station: str):
+    vehicle_id = FMM.get_vehicle_by_license_plate(client_hack,
+                                                  charging_station)['_id']
+
+    location_id = FMM.get_location_id(client_hack, 'New Hackshire')
+
+    FMM.create_task(client_hack, charging_station_task_type, vehicle_id,
+                    location_id, admin_user_id, fmm_api_url, accessToken)
 
 def revive_12v_battery(license_plate: str):
     set_battery_voltage(license_plate, random.uniform(12.0, 14.0))
@@ -101,6 +113,20 @@ def drain_fuel(license_plate: str, drain: Union[str, Number]):
     old_fuel_level = get_fuel_level(license_plate)
     new_fuel_level = max(old_fuel_level-float(drain), .0)
     set_fuel_level(license_plate, new_fuel_level)
+
+
+def get_lon_lat_of_vehicle(license_plate: str) -> dict:
+    vehicle = FMM.get_vehicle_by_license_plate(client_hack, license_plate)
+    return {'lon': vehicle['lon'], 'lat': vehicle['lat']}
+
+
+def get_all_charging_stations():
+    stations = client_hack.get_database('fmm').get_collection('vehicle').find(
+        filter={'status': 'blue'}
+    )
+
+    return {station['plate']: {'lon': station['lon'], 'lat': station['lat']}
+            for station in stations}
 
 
 def get_tasks_for_vehicle(license_plate: str):
