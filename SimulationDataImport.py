@@ -1,24 +1,7 @@
-import random
 import FMMFramework as FMM
 import SimulationFramework as sim
-from Utilities import get_address
 from Connection import client_int, client_hack
-from Projection import minlat_, minlon_, maxlat_, maxlon_, hackathon_projector
-
-def random_coordinates_from_hackathon_location():
-    lat = str(random.uniform(minlat_, maxlat_))
-    lon = str(random.uniform(minlon_, maxlon_))
-
-    address = get_address(lat, lon)
-
-    return {
-        'lat': lat,
-        'latitude': lat,
-        'lon': lon,
-        'longitude': lon,
-        'full_address': address,
-        'address': address
-    }
+from SimulationFramework import random_coordinates_from_hackathon_location
 
 
 def import_e_smart_into_hackathon_location(license_plate: str):
