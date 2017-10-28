@@ -1,8 +1,8 @@
 import FMMFramework as FMM
 import random
 from Connection import client_hack, accessToken
-from SimulationDataImport import random_coordinates_from_hackathon_location
-from Projection import hackathon_projector
+from Projection import hackathon_projector, minlat_, maxlat_, minlon_, maxlon_
+from Utilities import get_address
 from config import vehicle_count, fmm_api_url
 from typing import Union, Generator
 from numbers import Number
@@ -170,6 +170,17 @@ if __name__ == '__main__':
     """
 
 
+def random_coordinates_from_hackathon_location():
+    lat = str(random.uniform(minlat_, maxlat_))
+    lon = str(random.uniform(minlon_, maxlon_))
 
+    address = get_address(lat, lon)
 
-
+    return {
+        'lat': lat,
+        'latitude': lat,
+        'lon': lon,
+        'longitude': lon,
+        'full_address': address,
+        'address': address
+    }
