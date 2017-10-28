@@ -77,6 +77,10 @@ class Projector(object):
 
         return self.proj(x_, y_, inverse=True)
 
+    def pixel_coordinate_to_lat_lon_dict(self, x: Number, y: Number):
+        lon, lat = self.pixel_coordinate_to_lon_lat(x, y)
+        return {'lat': lat, 'lon': lon}
+
 
     def distance(self, point1: dict, point2: dict):
         p1_cart = np.array([self.proj(point1['lon'], point1['lat'])])
@@ -96,5 +100,4 @@ if __name__ == '__main__':
 
     # test lat-lon-calculation
     for x, y in [[0,0], [1000,0], [1000,1000], [0,1000]]:
-        print(hackathon_projector.pixel_coordinate_to_lon_lat(x, y))
-
+        print(hackathon_projector.pixel_coordinate_to_lat_lon_dict(x, y))
