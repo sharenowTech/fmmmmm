@@ -22,6 +22,22 @@ def all_license_plates() -> Generator:
     return ('NH-{}'.format(i) for i in range(vehicle_count))
 
 
+def random_coordinates_from_hackathon_location():
+    lat = str(random.uniform(minlat_, maxlat_))
+    lon = str(random.uniform(minlon_, maxlon_))
+    
+    address = get_address(lat, lon)
+    
+    return {
+        'lat': lat,
+        'latitude': lat,
+        'lon': lon,
+        'longitude': lon,
+        'full_address': address,
+        'address': address
+}
+
+
 def get_fuel_level(license_plate: str) -> float:
     return float(FMM.get_vehicle_by_license_plate(
         client_hack, license_plate
@@ -168,19 +184,3 @@ if __name__ == '__main__':
             {}, {'$set': {'locationAlias': 'newhack'}}
         )
     """
-
-
-def random_coordinates_from_hackathon_location():
-    lat = str(random.uniform(minlat_, maxlat_))
-    lon = str(random.uniform(minlon_, maxlon_))
-
-    address = get_address(lat, lon)
-
-    return {
-        'lat': lat,
-        'latitude': lat,
-        'lon': lon,
-        'longitude': lon,
-        'full_address': address,
-        'address': address
-    }
