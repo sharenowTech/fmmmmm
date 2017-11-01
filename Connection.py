@@ -2,7 +2,6 @@ import requests
 from config import fmm_int_config, fmm_hack_config, fmm_auth_token_config
 from pymongo import MongoClient
 
-
 client_int = MongoClient(
     host=fmm_int_config['host'],
     port=fmm_int_config['port'],
@@ -14,6 +13,7 @@ client_int = MongoClient(
 
 common_int = client_int.get_database('common')
 fmm_int = client_int.get_database('fmm')
+
 
 client_hack = MongoClient(
     host=fmm_hack_config['host'],

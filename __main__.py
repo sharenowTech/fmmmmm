@@ -1,22 +1,19 @@
 import SimulationFramework as sim
-import numpy as np
 import threading
 import random
 import queue
 from time import sleep
-from queue import Queue
-from typing import List, Callable
 from Projection import hackathon_projector
 
 action_queues = {
-    plate: Queue()
+    plate: queue.Queue()
     for plate in sim.all_license_plates()
 }
 
 charging_stations = sim.get_all_charging_stations()
 
 class QueueWorker(threading.Thread):
-    def __init__(self, queue: Queue):
+    def __init__(self, queue: queue.Queue):
         threading.Thread.__init__(self)
         self.queue = queue
 
@@ -64,7 +61,6 @@ def drain_fuel_periodic(min_drain: float, max_drain: float):
                                                                    max_drain))
 
 
-
 def kill_battery_periodic(propability: float):
     for plate in sim.all_license_plates():
         if random.random() < propability:
@@ -100,11 +96,12 @@ def check_position():
         pos[plate] = sim.get_lon_lat_of_vehicle(plate)
 
         for pos_station in charging_stations.values():
-            if hackathon_projector.distance(pos[plate], pos_station) <= 100:
+            if hackathon_projector.distance(pos[plate], pos_station) <= 200:
                 action_queues[plate].put(
                     [sim.drain_fuel, [plate, -5]]
                 )
     start_workers()
+
 
 def check_delivery():
     # TODO: get app opening tasks for every vehicle and check if customer
@@ -148,7 +145,6 @@ def main():
         threading.Thread(target=check_position).start()
         simulation_step(step_frequency)
         sleep(1.0/step_frequency)
-
 
 
 if __name__ == '__main__':

@@ -2,7 +2,6 @@ import pymongo.database
 import random
 import datetime
 import requests
-from typing import List
 
 
 def get_vehicle_collection(client: pymongo.MongoClient
@@ -167,5 +166,9 @@ def delete_tasks(client: pymongo.MongoClient, filter: dict):
 # unit-tests
 if __name__ == '__main__':
     from Connection import client_hack
-    for task in get_tasks(client_hack):
-        print(task)
+    import SimulationFramework as sim
+
+
+    vehicle = get_vehicle_by_license_plate(client_hack, 'NH-6')
+    vehicle.update(sim.random_coordinates_from_hackathon_location())
+    set_vehicle_fields(client_hack, vehicle_id=vehicle['_id'], update=vehicle)

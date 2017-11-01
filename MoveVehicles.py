@@ -34,6 +34,8 @@ position_queues = {
     plate: queue.LifoQueue() for plate in sim.all_license_plates()
 }
 
+max_simulated_paths = 10
+
 class QueueWorker(threading.Thread):
     def __init__(self, plate):
         threading.Thread.__init__(self)
@@ -55,62 +57,35 @@ class QueueWorker(threading.Thread):
 
 
 class PositionProducer(threading.Thread):
-    def __init__(self, plate, way):
+    def __init__(self, plate):
         threading.Thread.__init__(self)
         self.plate = plate
-        self.way = way
 
     def run(self):
-        for lat_lon in self.way:
-            if minlat_ < float(lat_lon['lat']) < maxlat_ and minlon_ < float(lat_lon['lon']) < maxlon_:
-                position_queues[self.plate].put(lat_lon)
-                QueueWorker(self.plate).start()
-                time.sleep(0.1)
-            else:
-                return
+        for _ in range(max_simulated_paths):
+            random_way = random.choice(ways)
+            for lat_lon in random_way:
+                if minlat_ < float(lat_lon['lat']) < maxlat_ and minlon_ < float(lat_lon['lon']) < maxlon_:
+                    position_queues[self.plate].put(lat_lon)
+                    QueueWorker(self.plate).start()
+                    time.sleep(1.0)
+                else:
+                    break
 
-# TODO: every car should run in its own while loop to make it really parallel
-# nice: don't need to join threads then
 
-# TODO: choose a way containing the node the car was located last
-while True:
-    random_ways = {
-        plate: random.choice(ways) for plate in sim.all_license_plates()
-    }
-
-    producers = {
-        plate: PositionProducer(plate, random_ways[plate])
+def main():
+    # TODO: choose a way containing the node the car was located last
+    vehicle_threads = {
+        plate: PositionProducer(plate)
         for plate in sim.all_license_plates()
     }
 
-    for plate in sim.all_license_plates():
-        producers[plate].start()
+    for thread in vehicle_threads.values():
+        thread.start()
 
-    for plate in sim.all_license_plates():
-        producers[plate].join()
-
-
-
-    """
-    
-    for plate in plates:
-        for lat_lon in random_ways[plate]:
-            if minlat_ < float(lat_lon['lat']) < maxlat_ and minlon_ < float(lat_lon['lon']) < maxlon_:
-                position_queues[plate].put(lat_lon)
-                QueueWorker(plate).start()
-                print('{} seconds passed after last step.'.format(t1-t0))
-            else:
-                break
-    """
+    for thread in vehicle_threads.values():
+        thread.join()
 
 
-
-    """
-    threading.Thread(
-        target=fmm.get_vehicle_collection(client_hack).find_one_and_update,
-        kwargs={
-            'filter': {'plate': plate},
-            'update': {'$set': expand_dict_with_address(random_way[-1])}
-        }
-    ).start()
-    """
+if __name__ == '__main__':
+    main()

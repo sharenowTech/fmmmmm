@@ -1,5 +1,6 @@
 import FMMFramework as FMM
 import SimulationFramework as sim
+import pymongo.database
 from Connection import client_int, client_hack
 from SimulationFramework import random_coordinates_from_hackathon_location
 
@@ -53,6 +54,7 @@ def remove_sensitive_vehicle_data(vehicle_id, license_plate: str):
 
 def import_charging_station(charging_station: str, lon_lat: dict):
     station = FMM.get_some_e_smart(client_int, 'Stuttgart')
+    station['_id'] = pymongo.database.ObjectId()
     station['plate'] = charging_station
     station['numberPlate'] = charging_station
     station['locationAlias'] = 'newhack'
@@ -65,7 +67,11 @@ def import_charging_station(charging_station: str, lon_lat: dict):
 
 
 if __name__ == '__main__':
-    for i in range(10):
+    for i in range(3):
+        import_charging_station(
+            'charging station {}'.format(i),
+            random_coordinates_from_hackathon_location()
+        )
         sim.create_charging_station_task('charging station {}'.format(i))
 
 
